@@ -1,0 +1,76 @@
+# Concurrency
+
+## 1. process & thread & coroutine & goroutine
+
+### process
+1. program -> process -> virtual memory( 32 byte system: 2^32=4G; 64: 2^64=16384P) -> 系统自动打开3个文件: stdin, stdout, stderr(process启动自动打开，退出自动关闭)
+2. min storage space unit最小的系统资源分配单位
+3. 4G virtual memory consist of (..., stack, heap)进程地址空间 -> MMU -> memory
+
+
+
+### thread
+
+1. light weight process
+2. min excute unit (share storage)最小的执行单位
+3. concurrency (deal with shared resource)
+4. synchronous: lock
+    * 互斥锁
+    * 读写锁写独占，读共享
+
+
+### corotine
+
+1. deal with shared resource: state
+
+### goroutine
+
+1. deal with shared resource: auto
+```go
+    go funcname()
+```
+2. master goroutine finished, child goroutine also exit.
+
+## 2. runtime lib
+
+1. `runtime.GoSched()`
+2. return and `runtime.Goexit()`
+    * return: return to invoke func, and `defer` before `return` will work
+    * Goexit(): exit invoke func, and `defer` before `Goexit()` will work
+3. `runtime.GOMAXPROCS()`: max num of cpu
+
+## 3. channel
+kind of datatype (FIFO)
+```go
+    make(chan type) # no cpacity channel means write need immidieatly read
+    make(chan type capacity)
+
+```
+### 3.1 goroutine communication
+通过通信来共享内存，不是通过共享内存来通信
+1. read
+2. write
+
+```go
+    ch := make(chan string)
+    
+```
+### 3.2 buffered vs unbuffered channel
+1. buffered channel
+    * cap=len=0, no storage
+    * 2 goroutines
+    * synchronous
+
+2. unbuffered channel
+    * cap != 0, len = cap - storage
+    * 1 goroutine also can work
+    * asynchronous
+
+### 3.3 select
+
+## 4. lock
+### 4.1 sync.Mutex
+访问共享数据前加锁，后解锁
+### 4.2 sync.RLock/RUlock/Lock/Ulock
+读共享，写独占，写优先级高于读
+
