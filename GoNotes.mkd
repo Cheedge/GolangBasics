@@ -74,3 +74,14 @@ kind of datatype (FIFO)
 ### 4.2 sync.RLock/RUlock/Lock/Ulock
 读共享，写独占，写优先级高于读
 
+## Notice:
+
+1. Short variable declarations may appear only inside functions.ref:[1],[2]
+
+
+
+
+
+<!-- --reference-- -->
+[1]: https://forum.golangbridge.org/t/x-somevalue-works-in-the-main-func-but-not-outside/3904
+[2]: https://go.dev/ref/spec#Short_variable_declarations
