@@ -52,22 +52,68 @@ func store2File(content string, filename string) {
 	os.WriteFile(filename, []byte(content), 0666)
 }
 
+func absFilter(abs string) string {
+	RE := regexp.MustCompile(`<span class="descriptor">Abstract:</span>(?s:(.*))</blockquote>`)
+	absContent := RE.FindAllStringSubmatch(abs, 1)
+	return absContent[0][1]
+}
+
+func abstractExtract(i int, abs [][]string) string {
+	url := ARXIV + abs[i][1]
+	resp, err := http.Get(url)
+	errHandle(err, "abstract extraciton error")
+	buff := make([]byte, 4096)
+	var absContent string
+	for {
+		n, _ := resp.Body.Read(buff)
+		if n == 0 {
+			break
+		}
+		absContent += string(buff[:n])
+	}
+	absAfterFilte := absFilter(absContent)
+	return absAfterFilte
+}
+
 func filter(content string) string {
-	RE := regexp.MustCompile(`<span class=\"descriptor\">Title:</span>\s(.*)`)
-	title := RE.FindAllStringSubmatch(content, -1)
+	// `<span class="descriptor">Authors:</span>\s\n(?s:(.*\n))`gm
+	// `<a href="/search/physics\?searchtype=author&query=(.*)">(.*)</a>`gm
+
+	RE_title := regexp.MustCompile(`<span class=\"descriptor\">Title:</span>\s(.*)`)
+	// RE_authors1 := regexp.MustCompile(`<span class="descriptor">Authors:</span>\s\n(?s:(.*\n))`)
+	// RE_authors1 := regexp.MustCompile(`<span class="descriptor">Authors:</span>\s\n(?s:(.*\n))</div>\n<div class="list-comments mathjax">`)
+	// RE_authors2 := regexp.MustCompile(`<a href="/search/physics\?searchtype=author&query=(.*)">(.*)</a>`)
+	RE_abs := regexp.MustCompile(`<a href="(/abs/.*)" title="Abstract">`)
+	abs := RE_abs.FindAllStringSubmatch(content, -1)
+	title := RE_title.FindAllStringSubmatch(content, -1)
+	// fmt.Print(abs)
+	// authors_content := RE_authors1.FindStringSubmatch(content)
+	// fmt.Println(authors_content)
+	// authors := RE_authors2.FindAllStringSubmatch(authors_content[0][1], -1)
+	// fmt.Println(len(authors))
+	// fmt.Println(len(authors_content))
 	// fmt.Println(title)
-	newContent := "title\t\t\t\n"
-	for _, cont := range title {
-		newContent += cont[1] + "\n"
+	newContent := "Info:\n"
+	for i, cont := range title {
+		absContent := abstractExtract(i, abs)
+		newContent += "Title:\n\t" + cont[1] + "\nAbstract:\n\t" + absContent + "\n"
+		// fmt.Println(abs[i][1])
+
+		// for _, auth := range authors {
+		// 	newContent += "\t" + auth[2] + "\n"
+		// 	// fmt.Println(i)
+		// }
 	}
 	return newContent
 }
+
+var ARXIV = "https://arxiv.org"
 
 func main() {
 	// 1. url
 	beg_page, end_page := pageInput()
 	for i := beg_page; i <= end_page; i++ {
-		url := "https://arxiv.org/list/physics/pastweek?skip=" + strconv.Itoa(i) + "+&show=100"
+		url := ARXIV + "/list/physics/pastweek?skip=" + strconv.Itoa(i) + "+&show=100"
 		scraperHandler(url, i)
 
 	}
