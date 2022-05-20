@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 )
 
@@ -39,10 +40,10 @@ func scraperHandler(url string, page int) {
 		}
 		content += string(buff[:n])
 	}
-
 	defer resp.Body.Close()
+	newcontent := filter(content)
 	// fmt.Println(content)
-	store2File(content, "arxiv"+strconv.Itoa(page)+".txt")
+	store2File(newcontent, "arxiv"+strconv.Itoa(page)+".txt")
 	// return content
 }
 
@@ -51,8 +52,15 @@ func store2File(content string, filename string) {
 	os.WriteFile(filename, []byte(content), 0666)
 }
 
-func filter() {
-
+func filter(content string) string {
+	RE := regexp.MustCompile(`<span class=\"descriptor\">Title:</span>\s(.*)`)
+	title := RE.FindAllStringSubmatch(content, -1)
+	// fmt.Println(title)
+	newContent := "title\t\t\t\n"
+	for _, cont := range title {
+		newContent += cont[1] + "\n"
+	}
+	return newContent
 }
 
 func main() {
